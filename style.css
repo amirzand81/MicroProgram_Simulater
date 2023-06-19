@@ -1,0 +1,229 @@
+textarea {
+  width: 240px;
+  resize: none;
+  margin-top: 10px;
+  height: 450px;
+  border: 0.5px solid #000000;
+}
+
+#microp-box {
+  margin-left: 90px;
+}
+
+label {
+  font-size: 20px;
+}
+
+.micromemory-table {
+  margin-top: -456px;
+  margin-left: 498px;
+  width: 30%;
+  font-size: 0.8rem;
+}
+
+.micromemory-table p {
+  font-size: 1rem;
+  margin: 0 0 0.2rem 0;
+}
+
+.micromemory-table table {
+  table-layout: fixed;
+  width: 90%;
+  margin: 0 auto;
+  overflow-y: auto;
+  height: 456px;
+  display: block;
+  color: rgb(0, 0, 0);
+  background-color: #ffffff;
+  border: 0.5px solid #000000;
+}
+
+.micromemory-table table,
+.micromemory-table tr,
+.micromemory-table td {
+  border-collapse: collapse;
+  border: 0.5px solid #000000;
+}
+
+.memory-table {
+  margin-top: -457px;
+  margin-left: 920px;
+  width: 30%;
+  font-size: 0.8rem;
+}
+
+.memory-table p {
+  font-size: 1rem;
+  margin: 0 0 0.2rem 0;
+}
+
+.memory-table table {
+  table-layout: fixed;
+  width: 90%;
+  margin: 0 auto;
+  overflow-y: auto;
+  height: 456px;
+  display: block;
+  color: rgb(0, 0, 0);
+  background-color: #ffffff;
+  border: 0.5px solid #000000;
+}
+
+.memory-table table,
+.memory-table tr,
+.memory-table td {
+  border-collapse: collapse;
+  border: 0.5px solid #000000;
+}
+
+body {
+  margin-top: 200px;
+
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  background-color: #81ecff;
+  font-family: 'Pangolin', cursive;
+}
+
+body {
+  padding: 1em;
+  background: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAcAAAAHCAYAAADEUlfTAAAAQElEQVQIW2P89OvDfwYo+PHjJ4zJwMHBzsAIk0SXAKkCS2KTAEu++vQSbizIKGQAl0SXAJkGlsQmAbcT2Shk+wH0sCzAEOZW1AAAAABJRU5ErkJggg==);
+}
+a {
+  color: #739931;
+}
+.page {
+  max-width: 60em;
+  margin: 0 auto;
+}
+table th,
+table td {
+  font-size: 10px;
+  text-align: left;
+}
+table.layout {
+  width: 100%;
+  border-collapse: collapse;
+}
+table.display {
+  margin: 1em 0;
+}
+table.display th,
+table.display td {
+  border: 1px solid #b3bfaa;
+  padding: 0.5em 1em;
+}
+
+table.display th {
+  background: #d5e0cc;
+}
+table.display td {
+  background: #fff;
+}
+
+table.responsive-table {
+  box-shadow: 0 1px 10px rgba(0, 0, 0, 0.2);
+}
+
+@media (max-width: 30em) {
+  table.responsive-table {
+    box-shadow: none;
+  }
+  table.responsive-table thead {
+    display: none;
+  }
+  table.display th,
+  table.display td {
+    padding: 0.5em;
+  }
+
+  table.responsive-table td:nth-child(1):before {
+    content: 'Number';
+  }
+  table.responsive-table td:nth-child(2):before {
+    content: 'Name';
+  }
+  table.responsive-table td:nth-child(1),
+  table.responsive-table td:nth-child(2) {
+    padding-left: 25%;
+  }
+  table.responsive-table td:nth-child(1):before,
+  table.responsive-table td:nth-child(2):before {
+    position: absolute;
+    left: 0.5em;
+    font-weight: bold;
+  }
+
+  table.responsive-table tr,
+  table.responsive-table td {
+    display: block;
+  }
+  table.responsive-table tr {
+    position: relative;
+    margin-bottom: 1em;
+    box-shadow: 0 1px 10px rgba(0, 0, 0, 0.2);
+  }
+  table.responsive-table td {
+    border-top: none;
+  }
+  table.responsive-table td.organisationnumber {
+    background: #d5e0cc;
+    border-top: 1px solid #b3bfaa;
+  }
+  table.responsive-table td.actions {
+    position: absolute;
+    top: 0;
+    right: 0;
+    border: none;
+    background: none;
+  }
+}
+
+.memory-table tr,
+.memory-table td {
+  padding: 0.2rem;
+}
+
+.bold-text {
+  font-weight: 900;
+}
+
+textarea:focus {
+  outline: 0;
+}
+
+.text-center {
+  text-align: center;
+}
+
+.sticky-header {
+  top: 0;
+  position: sticky;
+  background-color: #d5e0cc;
+  color: black;
+}
+
+.btn {
+  margin-top: 16px;
+  text-align: center;
+  margin-left: 10px;
+  width: 180px;
+  font-family: 'Pangolin', cursive;
+  cursor: pointer;
+  padding: 0.5rem 1rem;
+  color: #000000;
+  background-color: #d5e0cc;
+  border-radius: 8px;
+  border: solid #5a5a5a 3px;
+  font-size: 16px;
+}
+
+.btn:hover {
+  background-color: #5a5a5a;
+  color: #fff;
+}
+
+.btn:active {
+  transform: scale(0.9);
+}
