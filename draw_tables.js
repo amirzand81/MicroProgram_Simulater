@@ -81,9 +81,10 @@ const memoryTable = document.createElement('table');
 const memoryTable__container = document.querySelector('.memory-table');
 for (let i = -1; i < 2048; i++) {
   let row = document.createElement('tr');
-
+  row.style.fontSize = '10px';
   for (let j = 0; j < 5; j++) {
     let column = document.createElement('td');
+    column.style.fontSize = '10px';
 
     if (i == -1) {
       if (j == 0) {
@@ -127,8 +128,11 @@ const micromemory = document.createElement('table');
 const micromemory__container = document.querySelector('.micromemory-table');
 for (let i = -1; i < 128; i++) {
   let row = document.createElement('tr');
+  row.style.fontSize = '10px';
+
   for (let j = 0; j < 5; j++) {
     let column = document.createElement('td');
+    column.style.fontSize = '10px';
 
     if (i == -1) {
       if (j == 0) {

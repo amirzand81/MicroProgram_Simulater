@@ -1,23 +1,73 @@
-textarea {
-  width: 240px;
-  resize: none;
-  margin-top: 10px;
-  height: 450px;
-  border: 0.5px solid #000000;
+table.display th,
+table.display td {
+  border: 1px solid #b3bfaa;
 }
 
 #microp-box {
-  margin-left: 90px;
+  margin-left: 10px;
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  z-index: 1;
+}
+table.display {
+  margin-bottom: 10px;
+  margin-top: 12px;
+}
+
+table.display th {
+  background: #d5e0cc;
+  padding: 8px;
+  font-size: 15px;
+  text-align: center;
+  border-bottom: 1px solid #ddd;
+  width: 109px;
+}
+table.display td {
+  text-align: center;
+
+  font-size: 15px;
+  background: #fff;
+}
+
+table.responsive-table {
+  box-shadow: 0 1px 10px rgba(0, 0, 0, 0.2);
+}
+
+textarea {
+  margin-top: 10px;
+  width: 100%;
+  resize: none;
+  height: 470px;
+  border: 0.5px solid #000000;
+  font-size: 20px;
+}
+
+.container {
+  display: flex;
+  justify-content: space-between;
+  flex-direction: column;
+  width: 100%;
+  z-index: 1;
+}
+
+.memoreis_table {
+  width: 28%;
+  margin-right: 20px;
+}
+
+.textarea_box {
+  width: 22%;
+  margin-right: 20px;
 }
 
 label {
+  margin-left: 5%;
   font-size: 20px;
 }
 
 .micromemory-table {
-  margin-top: -456px;
-  margin-left: 498px;
-  width: 30%;
+  margin-top: 10px;
   font-size: 0.8rem;
 }
 
@@ -28,10 +78,8 @@ label {
 
 .micromemory-table table {
   table-layout: fixed;
-  width: 90%;
-  margin: 0 auto;
   overflow-y: auto;
-  height: 456px;
+  height: 476px;
   display: block;
   color: rgb(0, 0, 0);
   background-color: #ffffff;
@@ -46,9 +94,7 @@ label {
 }
 
 .memory-table {
-  margin-top: -457px;
-  margin-left: 920px;
-  width: 30%;
+  margin-top: 10px;
   font-size: 0.8rem;
 }
 
@@ -59,10 +105,8 @@ label {
 
 .memory-table table {
   table-layout: fixed;
-  width: 90%;
-  margin: 0 auto;
   overflow-y: auto;
-  height: 456px;
+  height: 476px;
   display: block;
   color: rgb(0, 0, 0);
   background-color: #ffffff;
@@ -77,8 +121,6 @@ label {
 }
 
 body {
-  margin-top: 200px;
-
   margin: 0;
   padding: 0;
   box-sizing: border-box;
@@ -96,88 +138,6 @@ a {
 .page {
   max-width: 60em;
   margin: 0 auto;
-}
-table th,
-table td {
-  font-size: 10px;
-  text-align: left;
-}
-table.layout {
-  width: 100%;
-  border-collapse: collapse;
-}
-table.display {
-  margin: 1em 0;
-}
-table.display th,
-table.display td {
-  border: 1px solid #b3bfaa;
-  padding: 0.5em 1em;
-}
-
-table.display th {
-  background: #d5e0cc;
-}
-table.display td {
-  background: #fff;
-}
-
-table.responsive-table {
-  box-shadow: 0 1px 10px rgba(0, 0, 0, 0.2);
-}
-
-@media (max-width: 30em) {
-  table.responsive-table {
-    box-shadow: none;
-  }
-  table.responsive-table thead {
-    display: none;
-  }
-  table.display th,
-  table.display td {
-    padding: 0.5em;
-  }
-
-  table.responsive-table td:nth-child(1):before {
-    content: 'Number';
-  }
-  table.responsive-table td:nth-child(2):before {
-    content: 'Name';
-  }
-  table.responsive-table td:nth-child(1),
-  table.responsive-table td:nth-child(2) {
-    padding-left: 25%;
-  }
-  table.responsive-table td:nth-child(1):before,
-  table.responsive-table td:nth-child(2):before {
-    position: absolute;
-    left: 0.5em;
-    font-weight: bold;
-  }
-
-  table.responsive-table tr,
-  table.responsive-table td {
-    display: block;
-  }
-  table.responsive-table tr {
-    position: relative;
-    margin-bottom: 1em;
-    box-shadow: 0 1px 10px rgba(0, 0, 0, 0.2);
-  }
-  table.responsive-table td {
-    border-top: none;
-  }
-  table.responsive-table td.organisationnumber {
-    background: #d5e0cc;
-    border-top: 1px solid #b3bfaa;
-  }
-  table.responsive-table td.actions {
-    position: absolute;
-    top: 0;
-    right: 0;
-    border: none;
-    background: none;
-  }
 }
 
 .memory-table tr,
