@@ -72,11 +72,21 @@ function DecToHex_contents(number) {
   return hex;
 }
 
+function writeHexNum(hex_number) {
+  if (hex_number.length <= 4) {
+    let number_of_zero = '';
+    for (let i = 0; i < 4 - hex_number.length; i++) {
+      number_of_zero += '0';
+    }
+    hex_number = number_of_zero + hex_number;
+    return hex_number;
+  }
+}
+
 function print(str) {
   console.log(str);
 }
 
-// create a memory table
 const memoryTable = document.createElement('table');
 const memoryTable__container = document.querySelector('.memory-table');
 for (let i = -1; i < 2048; i++) {
@@ -165,29 +175,19 @@ for (let i = -1; i < 128; i++) {
 }
 micromemory__container.appendChild(micromemory);
 
-const table = document.querySelector('.memory-table table');
-const rows = table.getElementsByTagName('tr');
-const columns = table.getElementsByTagName('td');
+function update_memory_table(address, label, line, instruction_code) {
+  const table = document.querySelector('.micromemory-table table');
+  const rows = table.getElementsByTagName('tr');
+  const columns = table.getElementsByTagName('td');
+  let index = (address + 1) * 5;
 
-function updateContentsColumn() {
-  let counter = startAddress;
-  for (
-    let i = parseInt('0x' + startAddress) + 1;
-    i < parseInt('0x' + startAddress) + numberOfAddress + 1;
-    i++
-  ) {
-    columns[i * 3 + 2].innerText = memory_table_contents[counter];
-    counter = addHexNumbers(counter, '1');
-  }
-  scrollToRow(parseInt('0x' + startAddress) + 1);
-}
+  columns[index + 2].innerText = label;
+  columns[index + 3].innerText = line;
+  columns[index + 4].innerText = instruction_code;
 
-function update_memory_table(address) {
-  let index = parseInt('0x' + address) + 1;
-  columns[index * 3 + 2].innerText = writeHexNum(
-    memory_table_contents[address]
-  );
-  columns[index * 3 + 2].classList.add('appear-content');
+  columns[index + 2].classList.add('appear-content');
+  columns[index + 3].classList.add('appear-content');
+  columns[index + 4].classList.add('appear-content');
 }
 
 function scrollToRow(number) {
