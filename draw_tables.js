@@ -177,7 +177,6 @@ micromemory__container.appendChild(micromemory);
 
 function update_microprogram_table(address, label, line, instruction_code) {
   const table = document.querySelector('.micromemory-table table');
-  const rows = table.getElementsByTagName('tr');
   const columns = table.getElementsByTagName('td');
   let index = (address + 1) * 5;
 
@@ -192,7 +191,6 @@ function update_microprogram_table(address, label, line, instruction_code) {
 
 function update_memory_table(address, label, line, instruction_code) {
   const table = document.querySelector('.memory-table table');
-  const rows = table.getElementsByTagName('tr');
   const columns = table.getElementsByTagName('td');
   let index = (address + 1) * 5;
 
@@ -207,21 +205,29 @@ function update_memory_table(address, label, line, instruction_code) {
 
 function lookup(str) {
   const table = document.querySelector('.micromemory-table table');
-  const rows = table.getElementsByTagName('tr');
   const columns = table.getElementsByTagName('td');
-  let index = (address + 1) * 5;
 
-  columns[index + 2].innerText = label;
-  columns[index + 3].innerText = line;
-  columns[index + 4].innerText = instruction_code;
+  for (let index = 0; index < 64; index += 4) {
+    if (columns[(index + 1) * 5 + 2].textContent == str) return index;
+  }
 
-  columns[index + 2].classList.add('appear-content');
-  columns[index + 3].classList.add('appear-content');
-  columns[index + 4].classList.add('appear-content');
+  return -1;
 }
 
 function scrollToRow(number) {
   const table = document.querySelector('.memory-table table');
   const rows = table.getElementsByTagName('tr');
   table.scrollTop = rows[number - 2].offsetTop;
+}
+
+function clear_microprogram_table() {
+  for (let index = 0; index < 128; index++) {
+    update_microprogram_table(index, '', '', '');
+  }
+}
+
+function clear_memory_table() {
+  for (let index = 0; index < 2048; index++) {
+    update_memory_table(index, '', '', '');
+  }
 }

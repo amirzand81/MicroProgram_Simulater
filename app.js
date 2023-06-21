@@ -1,4 +1,5 @@
-let bool = false;
+let isMicroprogramm = false;
+let isProgram = false;
 
 let F1_instructoin = [
   'ADD',
@@ -26,8 +27,231 @@ let conflict1 = [
 ];
 let conflict2 = ['READ', 'WRITE'];
 
+let micro_label = document.getElementsByClassName('micro_label')[0];
+let program_label = document.getElementsByClassName('program_label')[0];
+
+let start = document.getElementById('start');
+start.onclick = function () {
+  if (!isProgram) {
+    alert('First, you should assemble your program code');
+    return;
+  }
+};
+
+let stepby = document.getElementById('stepby');
+stepby.onclick = function () {
+  if (!isProgram) {
+    alert('First, you should assemble your program code');
+    return;
+  }
+};
+
+document.getElementsByTagName('textarea')[1].onchange = function () {
+  isProgram = false;
+  program_label.innerHTML = 'Program(*)';
+};
+
+let assembler = document.getElementById('assembler');
+assembler.onclick = function () {
+  if (!isMicroprogramm) {
+    alert('First, you should add microprogram code');
+    return;
+  }
+
+  if (isProgram) {
+    alert('without change');
+    return;
+  }
+
+  clear_memory_table();
+  let pointer;
+  let program_code = document
+    .getElementsByTagName('textarea')[1]
+    .value.split('\n')
+    .map(item => item.trim())
+    .filter(Boolean);
+
+  // check microprogram code be not empty
+  if (program_code.length == 0) {
+    return;
+  }
+
+  let len = program_code.length;
+  let addrss_symble_table = new Array();
+  // first level of translation (complete symble table addresses)
+  for (let i = 0; i < len; i++) {
+    let label = '';
+    let line = program_code[i].split(' ').filter(str => str.trim() !== '');
+
+    // check microprogram code started with ORG
+    if (i == 0 && line[0] != 'ORG') {
+      alert('Program code must start with ORG.');
+      return;
+    }
+
+    // check microprogram code finished with END
+    if (i == len - 1) {
+      if (line[0] !== 'END' || line.length > 1) {
+        alert('Program code must end with END.');
+        return;
+      }
+    }
+
+    // ORG (set pointer)
+    else if (line[0] === 'ORG') {
+      if (line.length == 2) {
+        pointer = parseInt(line[1]);
+        continue;
+      } else {
+        alert('ORG must have a parameter');
+        return;
+      }
+    }
+
+    // check if instrcution has label, extract it
+    else {
+      if (line.join(' ').includes(',')) {
+        let temp = line
+          .join(' ')
+          .split(',')
+          .filter(str => str.trim() !== '');
+
+        label = temp[0].trim();
+        line = temp[1].split(' ');
+
+        if (line[0] == '') line.shift();
+      }
+
+      for (let i = 0; i < addrss_symble_table.length; i++) {
+        if (addrss_symble_table[i][0] === label) {
+          clear_memory_table();
+          alert(`${label} is previuosly defined.`);
+          return;
+        }
+      }
+
+      program_code[i] = label + ', ' + line.join(' ');
+      addrss_symble_table.push([label, pointer++]);
+    }
+  }
+
+  // second level of translation (translation instructions)
+  for (let i = 0; i < len - 1; i++) {
+    let I = '0';
+    let address = '00000000000';
+    let opcode;
+
+    let label = '';
+
+    let line = program_code
+      .shift()
+      .split(' ')
+      .filter(str => str.trim() !== '');
+
+    if (line[0] === 'ORG') {
+      pointer = parseInt(line[1]);
+      continue;
+    }
+
+    // translation of each instruction
+    else {
+      if (line[0].includes(',')) {
+        label = line[0].slice(0, -1);
+        line.shift();
+      }
+
+      let instruction_string = line.join(' ');
+
+      if (line[0] == 'HEX') {
+        let instruction_code = '0x' + line[1].padStart(4, '0');
+
+        update_memory_table(
+          pointer++,
+          label,
+          instruction_string,
+          instruction_code
+        );
+        continue;
+      }
+
+      if (line[0] == 'DEC') {
+        let instruction_code =
+          '0x' + parseInt(line[1]).toString(16).toUpperCase().padStart(4, '0');
+
+        update_memory_table(
+          pointer++,
+          label,
+          instruction_string,
+          instruction_code
+        );
+        continue;
+      }
+
+      if (lookup(line[0]) === -1) {
+        clear_memory_table();
+        alert(line[0] + ' is not a instruction');
+        return;
+      }
+
+      opcode = (lookup(line[0]) / 4).toString(2).padStart(4, '0');
+
+      if (line.length == 3) {
+        if (line[2] == 'I') I = '1';
+        else {
+          clear_memory_table();
+          alert('Error in line ' + pointer);
+          return;
+        }
+        line.pop();
+      }
+
+      if (line.length == 2) {
+        let flag = true;
+        for (let i = 0; i < addrss_symble_table.length; i++) {
+          if (addrss_symble_table[i][0] == line[1]) {
+            flag = false;
+            address = addrss_symble_table[i][1].toString(2).padStart(11, '0');
+          }
+        }
+
+        if (flag) {
+          clear_memory_table();
+          alert(`${line[1]} is not decleared`);
+          return;
+        }
+      }
+
+      let instruction_code =
+        '0x' +
+        parseInt(I + opcode + address, 2)
+          .toString(16)
+          .toUpperCase()
+          .padStart(4, '0');
+
+      update_memory_table(
+        pointer++,
+        label,
+        instruction_string,
+        instruction_code
+      );
+    }
+  }
+  isProgram = true;
+  program_label.innerHTML = 'Program';
+  alert('Program assembled succesfully.');
+};
+
+document.getElementsByTagName('textarea')[0].onchange = function () {
+  isMicroprogramm = false;
+  micro_label.innerHTML = 'MicroProgram(*)';
+};
+
 let micropro = document.getElementById('micropro');
 micropro.onclick = function () {
+  if (isMicroprogramm) {
+    alert('without change');
+    return;
+  }
   clear_microprogram_table();
   let pointer;
   let micropro_code = document
@@ -50,11 +274,14 @@ micropro.onclick = function () {
     let line = micropro_code[i].split(' ').filter(str => str.trim() !== '');
 
     // check microprogram code started with ORG
-    if (i == 0 && line[0] != 'ORG') return;
+    if (i == 0 && line[0] != 'ORG') {
+      alert('Microprogram must start with ORG');
+      return;
+    }
 
     // check microprogram code finished with END
     if (i == len - 1) {
-      if (line[0] !== 'END') {
+      if (line[0] !== 'END' || line.length > 1) {
         alert('Microprogramming code must end with END.');
         return;
       }
@@ -73,6 +300,12 @@ micropro.onclick = function () {
 
     // check if instrcution has label, extract it
     else {
+      if (line.length == 1) {
+        clear_microprogram_table();
+        alert(`Syntax error in line ${pointer}`);
+        return;
+      }
+
       if (line[0].includes(':')) {
         let temp = line[0].split(':');
         label = temp[0];
@@ -84,8 +317,17 @@ micropro.onclick = function () {
         label = line[0];
         line.shift();
       }
+
+      for (let i = 0; i < addrss_symble_table.length; i++) {
+        if (addrss_symble_table[i][0] === label) {
+          clear_microprogram_table();
+          alert(`${label} is previuosly defined.`);
+          return;
+        }
+      }
+
       micropro_code[i] = label + ': ' + line.join(' ');
-      addrss_symble_table.push([label, pointer++]);
+      if (label !== '') addrss_symble_table.push([label, pointer++]);
     }
   }
 
@@ -115,6 +357,7 @@ micropro.onclick = function () {
 
       let instruction_string = line.join(' ');
 
+      // determine type of branch and address of branching
       switch (line[line.length - 1]) {
         case 'RET':
           br = '10';
@@ -151,6 +394,7 @@ micropro.onclick = function () {
           }
       }
 
+      // determine condition
       switch (line.pop()) {
         case 'U':
           cd = '00';
@@ -166,9 +410,10 @@ micropro.onclick = function () {
           break;
       }
 
+      // check syntax error
       if (line.length == 0 || cd == undefined || br == undefined) {
         clear_microprogram_table();
-        alert(`Error in line ${pointer}`);
+        alert(`Syntax error in line ${pointer}`);
         return;
       }
 
@@ -195,6 +440,7 @@ micropro.onclick = function () {
           return;
         }
 
+        // check that all instrcutino are from different set (F1, F2, F3)
         if (i == 0) {
           if (F1_instructoin.includes(line[i])) first = 1;
           if (F2_instructoin.includes(line[i])) first = 2;
@@ -225,7 +471,6 @@ micropro.onclick = function () {
               `"${line[0]}" and "${line[2]}" are in F${first} set.\nError in line ${pointer}`
             );
             clear_microprogram_table();
-
             return;
           }
           if (third == second) {
@@ -233,7 +478,6 @@ micropro.onclick = function () {
               `"${line[1]}" and "${line[2]}" are in F${second} set.\nError in line ${pointer}`
             );
             clear_microprogram_table();
-
             return;
           }
         }
@@ -242,6 +486,7 @@ micropro.onclick = function () {
       let counter = 0;
       let conflict = [];
 
+      // check all instructoin are compatible
       for (let i = 0; i < line.length; i++) {
         if (conflict1.includes(line[i])) {
           counter++;
@@ -279,6 +524,7 @@ micropro.onclick = function () {
         return;
       }
 
+      // determine instruction code
       for (let i = 0; i < line.length; i++) {
         if (F1_instructoin.indexOf(line[i]) >= 0)
           f1 = (F1_instructoin.indexOf(line[i]) + 1)
@@ -298,7 +544,8 @@ micropro.onclick = function () {
         '0x' +
         parseInt(f1 + f2 + f3 + cd + br + address, 2)
           .toString(16)
-          .toUpperCase();
+          .toUpperCase()
+          .padStart(5, '0');
 
       update_microprogram_table(
         pointer++,
@@ -308,11 +555,7 @@ micropro.onclick = function () {
       );
     }
   }
-  bool = true;
+  isMicroprogramm = true;
+  micro_label.innerHTML = 'MicroProgram';
+  alert('Microprogram added succesfully.');
 };
-
-function clear_microprogram_table() {
-  for (let index = 0; index < 128; index++) {
-    update_microprogram_table(index, '', '', '');
-  }
-}
