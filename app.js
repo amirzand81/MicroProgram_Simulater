@@ -1,5 +1,4 @@
 let bool = false;
-let addrss_symble_table = new Array();
 
 let F1_instructoin = [
   'ADD',
@@ -29,46 +28,40 @@ let conflict2 = ['READ', 'WRITE'];
 
 let micropro = document.getElementById('micropro');
 micropro.onclick = function () {
-  for (let index = 0; index < 128; index++) {
-    update_microprogram_table(index, '', '', '');
-  }
-
-  bool = true;
+  clear_microprogram_table();
   let pointer;
   let micropro_code = document
     .getElementsByTagName('textarea')[0]
     .value.split('\n')
-    .filter(str => str.trim() !== '');
+    .map(item => item.trim())
+    .filter(Boolean);
 
   // check microprogram code be not empty
   if (micropro_code.length == 0) {
-    alert('Microprogramming code is empty.');
     return;
   }
 
-  // check microprogram code finished with END
-  if (micropro_code[micropro_code.length - 1].trim() !== 'END') {
-    alert('Microprogramming code must end with END.');
-    return;
-  }
-
-  micropro_code.pop();
   let len = micropro_code.length;
-  addrss_symble_table = [];
+  let addrss_symble_table = new Array();
 
+  // first level of translation (complete symble table addresses)
   for (let i = 0; i < len; i++) {
-    let lineNumber;
     let label = '';
-
     let line = micropro_code[i].split(' ').filter(str => str.trim() !== '');
 
     // check microprogram code started with ORG
-    if (i == 0 && line[0] != 'ORG') {
-      alert('Microprogramming code must start with ORG.');
-      return;
+    if (i == 0 && line[0] != 'ORG') return;
+
+    // check microprogram code finished with END
+    if (i == len - 1) {
+      if (line[0] !== 'END') {
+        alert('Microprogramming code must end with END.');
+        return;
+      }
     }
 
-    if (line[0] === 'ORG') {
+    // ORG (set pointer)
+    else if (line[0] === 'ORG') {
       if (line.length == 2) {
         pointer = parseInt(line[1]);
         continue;
@@ -76,34 +69,31 @@ micropro.onclick = function () {
         alert('ORG must have a parameter');
         return;
       }
-    } else {
-      if (line[1].includes(':')) {
-        if (line[1] === ':') line.splice(1, 1);
+    }
 
+    // check if instrcution has label, extract it
+    else {
+      if (line[0].includes(':')) {
+        let temp = line[0].split(':');
+        label = temp[0];
+        if (temp[1] != '') line[1] = temp[1] + ' ' + line[1];
+        line.shift();
+      } else if (line[1].includes(':')) {
+        if (line[1] === ':') line.splice(1, 1);
+        if (line[1][0] === ':') line[1] = line[1].substring(1);
         label = line[0];
         line.shift();
-        lineNumber = pointer + i;
       }
-
-      if (line[0].includes(':')) {
-        label = line[0].slice(0, -1);
-        line.shift();
-        lineNumber = pointer + i;
-      }
-
-      if (label !== '') {
-        addrss_symble_table.push([label, lineNumber - 1]);
-      }
+      micropro_code[i] = label + ': ' + line.join(' ');
+      addrss_symble_table.push([label, pointer++]);
     }
   }
 
-  for (let i = 0; i < len; i++) {
-    let f1 = '000';
-    let f2 = '000';
-    let f3 = '000';
+  // second level of translation (translation instructions)
+  for (let i = 0; i < len - 1; i++) {
+    let f1 = (f2 = f3 = '000');
     let address = '0000000';
-    let cd;
-    let br;
+    let cd, br;
 
     let label = '';
     let line = micropro_code
@@ -112,17 +102,12 @@ micropro.onclick = function () {
       .filter(str => str.trim() !== '');
 
     if (line[0] === 'ORG') {
-      if (line.length == 2) {
-        pointer = parseInt(line[1]);
-        continue;
-      }
-    } else {
-      if (line[1].includes(':')) {
-        if (line[1] === ':') line.splice(1, 1);
-        label = line[0];
-        line.shift();
-      }
+      pointer = parseInt(line[1]);
+      continue;
+    }
 
+    // translation of each instruction
+    else {
       if (line[0].includes(':')) {
         label = line[0].slice(0, -1);
         line.shift();
@@ -130,46 +115,43 @@ micropro.onclick = function () {
 
       let instruction_string = line.join(' ');
 
-      if (line[line.length - 1] == 'RET') {
-        br = '10';
-        line.pop();
-      }
-      if (line[line.length - 1] == 'MAP') {
-        br = '11';
-        line.pop();
-      }
+      switch (line[line.length - 1]) {
+        case 'RET':
+          br = '10';
+        case 'MAP':
+          br = '11';
 
-      if (line[line.length - 2] == 'CALL' || line[line.length - 2] == 'JMP') {
-        if (line[line.length - 2] == 'CALL') br = '01';
-        if (line[line.length - 2] == 'JMP') br = '00';
+          line.pop();
+          break;
 
-        if (line[line.length - 1] == 'NEXT') {
-          address = (pointer + 1).toString(2).padStart(7, '0');
-        } else {
-          let flag = true;
-          for (let i = 0; i < addrss_symble_table.length; i++) {
-            if (addrss_symble_table[i][0] == line[line.length - 1]) {
-              flag = false;
-              address = addrss_symble_table[i][1].toString(2).padStart(7, '0');
+        default:
+          let addr = line.pop();
+          let branch = line.pop();
+
+          br = branch == 'CALL' ? '01' : branch == 'JMP' ? '00' : undefined;
+
+          if (addr == 'NEXT') {
+            address = (pointer + 1).toString(2).padStart(7, '0');
+          } else {
+            let flag = true;
+            for (let i = 0; i < addrss_symble_table.length; i++) {
+              if (addrss_symble_table[i][0] == addr) {
+                flag = false;
+                address = addrss_symble_table[i][1]
+                  .toString(2)
+                  .padStart(7, '0');
+              }
+            }
+
+            if (flag) {
+              clear_microprogram_table();
+              alert(`${addr} is not decleared`);
+              return;
             }
           }
-
-          if (flag) {
-            alert(`${line[line.length - 1]} is not decleared`);
-            for (let index = 0; index < 128; index++) {
-              update_microprogram_table(index, '', '', '');
-            }
-            return;
-          }
-        }
-
-        line.pop();
-        line.pop();
       }
 
-      let lastItem = line.pop();
-
-      switch (lastItem) {
+      switch (line.pop()) {
         case 'U':
           cd = '00';
           break;
@@ -185,10 +167,8 @@ micropro.onclick = function () {
       }
 
       if (line.length == 0 || cd == undefined || br == undefined) {
+        clear_microprogram_table();
         alert(`Error in line ${pointer}`);
-        for (let index = 0; index < 128; index++) {
-          update_microprogram_table(index, '', '', '');
-        }
         return;
       }
 
@@ -200,20 +180,18 @@ micropro.onclick = function () {
       let first;
       let second;
       let third;
-      let counter = 0;
-      let conflict = [];
 
       for (let i = 0; i < line.length; i++) {
         if (line[i] == 'NOP') break;
+
+        // check that all instrcutino are validate
         if (
           !F1_instructoin.includes(line[i]) &&
           !F2_instructoin.includes(line[i]) &&
           !F3_instructoin.includes(line[i])
         ) {
           alert(`"${line[i]}" is not a instruction.\nError in line ${pointer}`);
-          for (let index = 0; index < 128; index++) {
-            update_microprogram_table(index, '', '', '');
-          }
+          clear_microprogram_table();
           return;
         }
 
@@ -232,9 +210,7 @@ micropro.onclick = function () {
             alert(
               `"${line[0]}" and "${line[1]}" are in F${first} set.\nError in line ${pointer}`
             );
-            for (let index = 0; index < 128; index++) {
-              update_microprogram_table(index, '', '', '');
-            }
+            clear_microprogram_table();
             return;
           }
         }
@@ -248,22 +224,23 @@ micropro.onclick = function () {
             alert(
               `"${line[0]}" and "${line[2]}" are in F${first} set.\nError in line ${pointer}`
             );
-            for (let index = 0; index < 128; index++) {
-              update_microprogram_table(index, '', '', '');
-            }
+            clear_microprogram_table();
+
             return;
           }
           if (third == second) {
             alert(
               `"${line[1]}" and "${line[2]}" are in F${second} set.\nError in line ${pointer}`
             );
-            for (let index = 0; index < 128; index++) {
-              update_microprogram_table(index, '', '', '');
-            }
+            clear_microprogram_table();
+
             return;
           }
         }
       }
+
+      let counter = 0;
+      let conflict = [];
 
       for (let i = 0; i < line.length; i++) {
         if (conflict1.includes(line[i])) {
@@ -278,11 +255,12 @@ micropro.onclick = function () {
             ' and '
           )} can not use simulately.\nError in line ${pointer}`
         );
-        for (let index = 0; index < 128; index++) {
-          update_microprogram_table(index, '', '', '');
-        }
+        clear_microprogram_table();
         return;
       }
+
+      counter = 0;
+      conflict = [];
 
       for (let i = 0; i < line.length; i++) {
         if (conflict2.includes(line[i])) {
@@ -297,9 +275,7 @@ micropro.onclick = function () {
             ' and '
           )} can not use simulately.\nError in line ${pointer}`
         );
-        for (let index = 0; index < 128; index++) {
-          update_microprogram_table(index, '', '', '');
-        }
+        clear_microprogram_table();
         return;
       }
 
@@ -318,9 +294,11 @@ micropro.onclick = function () {
             .padStart(3, '0');
       }
 
-      let instruction_code = f1 + f2 + f3 + cd + br + address;
-      instruction_code =
-        '0x' + parseInt(instruction_code, 2).toString(16).toUpperCase();
+      let instruction_code =
+        '0x' +
+        parseInt(f1 + f2 + f3 + cd + br + address, 2)
+          .toString(16)
+          .toUpperCase();
 
       update_microprogram_table(
         pointer++,
@@ -330,9 +308,11 @@ micropro.onclick = function () {
       );
     }
   }
+  bool = true;
 };
 
-let assembler = document.getElementById('assembler');
-assembler.onclick = function () {
-  console.log(bool);
-};
+function clear_microprogram_table() {
+  for (let index = 0; index < 128; index++) {
+    update_microprogram_table(index, '', '', '');
+  }
+}

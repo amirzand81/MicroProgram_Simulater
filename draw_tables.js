@@ -167,7 +167,7 @@ for (let i = -1; i < 128; i++) {
     } else if (j == 1) {
       column.innerText = '0x' + DecToHex_address(i).substring(3);
       column.classList.add('bold-text');
-    } 
+    }
     column.classList.add('text-center');
     row.appendChild(column);
   }
@@ -177,6 +177,21 @@ micromemory__container.appendChild(micromemory);
 
 function update_microprogram_table(address, label, line, instruction_code) {
   const table = document.querySelector('.micromemory-table table');
+  const rows = table.getElementsByTagName('tr');
+  const columns = table.getElementsByTagName('td');
+  let index = (address + 1) * 5;
+
+  columns[index + 2].innerText = label;
+  columns[index + 3].innerText = line;
+  columns[index + 4].innerText = instruction_code;
+
+  columns[index + 2].classList.add('appear-content');
+  columns[index + 3].classList.add('appear-content');
+  columns[index + 4].classList.add('appear-content');
+}
+
+function update_memory_table(address, label, line, instruction_code) {
+  const table = document.querySelector('.memory-table table');
   const rows = table.getElementsByTagName('tr');
   const columns = table.getElementsByTagName('td');
   let index = (address + 1) * 5;
@@ -204,7 +219,6 @@ function lookup(str) {
   columns[index + 3].classList.add('appear-content');
   columns[index + 4].classList.add('appear-content');
 }
-
 
 function scrollToRow(number) {
   const table = document.querySelector('.memory-table table');
