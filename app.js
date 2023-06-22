@@ -1,6 +1,23 @@
 let isMicroprogramm = false;
 let isProgram = false;
 
+let ACTag = document.getElementsByClassName('AC')[0];
+let DRTag = document.getElementsByClassName('DR')[0];
+let ARTag = document.getElementsByClassName('AR')[0];
+let PCTag = document.getElementsByClassName('PC')[0];
+let ETag = document.getElementsByClassName('E')[0];
+let SBRTag = document.getElementsByClassName('SBR')[0];
+let CARTag = document.getElementsByClassName('CAR')[0];
+let ITag = document.getElementsByClassName('I')[0];
+let OPCODETag = document.getElementsByClassName('OPCODE')[0];
+let ADDRTag = document.getElementsByClassName('ADDR')[0];
+let F1Tag = document.getElementsByClassName('F1')[0];
+let F2Tag = document.getElementsByClassName('F2')[0];
+let F3Tag = document.getElementsByClassName('F3')[0];
+let CDTag = document.getElementsByClassName('CD')[0];
+let BRTag = document.getElementsByClassName('BR')[0];
+let ADTag = document.getElementsByClassName('AD')[0];
+
 let F1_instructoin = [
   'ADD',
   'CLRAC',
@@ -43,6 +60,72 @@ stepby.onclick = function () {
   if (!isProgram) {
     alert('First, you should assemble your program code');
     return;
+  }
+
+  let line = 2;
+
+  while (true) {
+    let AC = ACTag.textContent;
+    let DR = DRTag.textContent;
+    let AR = ARTag.textContent;
+    let PC = PCTag.textContent;
+    let E = ETag.textContent;
+    let SBR = SBRTag.textContent;
+    let CAR = CARTag.textContent;
+
+    let instrcution = parseInt(getMicroprogramLine(line), 16)
+      .toString(2)
+      .padStart(20, '0');
+    F1Tag.innerHTML = instrcution.slice(0, 3).padStart(3, '0');
+    F2Tag.innerHTML = instrcution.slice(3, 6).padStart(3, '0');
+    F3Tag.innerHTML = instrcution.slice(6, 9).padStart(3, '0');
+    CDTag.innerHTML = instrcution.slice(9, 10).padStart(2, '0');
+    BRTag.innerHTML = instrcution.slice(10, 12).padStart(2, '0');
+    ADTag.innerHTML = instrcution.slice(12, 20).padStart(7, '0');
+
+    // here stop for debuging
+
+    switch (F1Tag.textContent) {
+      // F1 -> ADD
+      case '001':
+        ADD(AC, DR);
+        break;
+
+      // F1 -> CLRAC
+      case '010':
+        ACTag.innerHTML = '0x0000';
+        break;
+
+      // F1 -> INCAC
+      case '011':
+        INCAC(AC);
+        break;
+
+      // F1 -> DRTAC
+      case '100':
+        ACTag.innerHTML = DR;
+        break;
+
+      // F1 -> DRTAR
+      case '101':
+        ARTag.innerHTML = parseInt(DR, 16)
+          .toString(2)
+          .padStart(16, '0')
+          .slice(5);
+        break;
+
+      // F1 -> PCTAR
+      case '110':
+        ARTag.innerHTML = PC;
+        break;
+
+      // F1 -> WRITE
+      case '111':
+        WRITE(DR, AR);
+        break;
+    }
+
+    break;
   }
 };
 
@@ -121,7 +204,6 @@ assembler.onclick = function () {
 
         if (line[0] == '') line.shift();
       }
-
       for (let i = 0; i < addrss_symble_table.length; i++) {
         if (addrss_symble_table[i][0] === label) {
           clear_memory_table();
@@ -131,7 +213,7 @@ assembler.onclick = function () {
       }
 
       program_code[i] = label + ', ' + line.join(' ');
-      addrss_symble_table.push([label, pointer++]);
+      if (label !== '') addrss_symble_table.push([label, pointer++]);
     }
   }
 
@@ -559,3 +641,96 @@ micropro.onclick = function () {
   micro_label.innerHTML = 'MicroProgram';
   alert('Microprogram added succesfully.');
 };
+
+function twosComplementToDecimal(binary) {
+  // Check if the input is a valid binary string
+  if (!/^[01]+$/.test(binary)) {
+    return null;
+  }
+
+  // Check if the binary string represents a negative number
+  const isNegative = binary.charAt(0) === '1';
+
+  // Calculate the magnitude of the number by taking the one's complement and adding 1
+  const magnitude = isNegative
+    ? parseInt(twosComplementOnes(binary), 2) + 1
+    : parseInt(binary, 2);
+
+  // Return the positive or negative value based on the leftmost bit
+  return isNegative ? -magnitude : magnitude;
+}
+
+function twosComplementOnes(binary) {
+  return binary
+    .split('')
+    .map(bit => (bit === '0' ? '1' : '0'))
+    .join('');
+}
+
+function DecimaltotwosComplement(num) {
+  let isNeg = num < 0;
+  let bin;
+
+  if (isNeg) {
+    bin = (num * -1).toString(2).padStart(16, '0');
+    let flag = true;
+
+    for (let i = 15; i >= 0; i--) {
+      if (flag) {
+        if (bin[i] == '1') {
+          flag = false;
+        }
+        continue;
+      }
+
+      let newChar = bin[i] == '0' ? '1' : '0';
+      let arr = bin.split('');
+      arr[i] = newChar;
+      bin = arr.join('');
+    }
+  } else {
+    bin = num.toString(2).padStart(16, '0');
+  }
+
+  return bin;
+}
+
+function INCAC(str) {
+  let base2 = parseInt(str, 16).toString(2).padStart(16, '0');
+  let decimal = twosComplementToDecimal(base2);
+  ACTag.innerHTML =
+    '0x' +
+    parseInt(DecimaltotwosComplement(decimal + 1), 2)
+      .toString(16)
+      .toUpperCase()
+      .padStart(4, '0');
+}
+
+const ADD = (str1, str2) => {
+  str1 = parseInt(str1, 16).toString(2);
+  str2 = parseInt(str2, 16).toString(2);
+
+  let carry = 0;
+  const res = [];
+  let l1 = str1.length;
+  let l2 = str2.length;
+  for (let i = l1 - 1, j = l2 - 1; 0 <= i || 0 <= j; --i, --j) {
+    let a = 0 <= i ? Number(str1[i]) : 0,
+      b = 0 <= j ? Number(str2[j]) : 0;
+    res.push((a + b + carry) % 2);
+    carry = 1 < a + b + carry;
+  }
+
+  ETag.innerHTML = (+carry).toString();
+  ACTag.innerHTML =
+    '0x' + parseInt(res.reverse().join(''), 2).toString(16).padStart(4, '0');
+};
+
+function WRITE(str, ad) {
+  const table = document.querySelector('.memory-table table');
+  const columns = table.getElementsByTagName('td');
+
+  let label = columns[(parseInt(ad, 2) + 1) * 5 + 2].textContent;
+  let instrcution = columns[(parseInt(ad, 2) + 1) * 5 + 3].textContent;
+  update_memory_table(parseInt(ad, 2), label, instrcution, str);
+}

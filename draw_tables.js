@@ -231,3 +231,15 @@ function clear_memory_table() {
     update_memory_table(index, '', '', '');
   }
 }
+
+function getMicroprogramLine(line) {
+  const table = document.querySelector('.micromemory-table table');
+  const column = table.getElementsByTagName('td');
+  return column[(line + 1) * 5 + 4].textContent;
+}
+
+// function test() {
+//   const table = document.querySelector('.micromemory-table table');
+//   const row = table.getElementsByTagName('tr');
+//   console.log((row[1].style.backgroundColor = 'red'));
+// }
