@@ -76,6 +76,7 @@ stepby.onclick = function () {
     let instrcution = parseInt(getMicroprogramLine(line), 16)
       .toString(2)
       .padStart(20, '0');
+
     F1Tag.innerHTML = instrcution.slice(0, 3).padStart(3, '0');
     F2Tag.innerHTML = instrcution.slice(3, 6).padStart(3, '0');
     F3Tag.innerHTML = instrcution.slice(6, 9).padStart(3, '0');
@@ -95,6 +96,7 @@ stepby.onclick = function () {
       // F1 -> CLRAC
       case '010':
         ACTag.innerHTML = '0x0000';
+        AC = '0x0000';
         break;
 
       // F1 -> INCAC
@@ -161,6 +163,45 @@ stepby.onclick = function () {
       // F2 -> PCTDR
       case '111':
         PCTDR(PC, DR);
+        break;
+    }
+
+    // run F3 operation
+    switch (F3Tag.textContent) {
+      // F3 -> XOR
+      case '001':
+        XOR(AC, DR);
+        break;
+
+      // F3 -> COM
+      case '010':
+        let complementone = COM(parseInt(AC, 16).toString(2).padStart(16, '0'));
+        ACTag.innerHTML =
+          '0x' +
+          parseInt(complementone, 2)
+            .toString(16)
+            .padStart(4, '0')
+            .toUpperCase();
+        break;
+
+      // F3 -> SHL
+      case '011':
+        SHL(AC, E);
+        break;
+
+      // F3 -> SHR
+      case '100':
+        SHR(AC, E);
+        break;
+
+      // F3 -> INCPC
+      case '101':
+        INCPC(PC);
+        break;
+
+      // F3 -> ARTPC
+      case '110':
+        PCTag.innerHTML = AR;
         break;
     }
 
@@ -846,4 +887,67 @@ function PCTDR(str1, str2) {
       .toString(16)
       .padStart(4, '0')
       .toUpperCase();
+}
+
+function XOR(a, b) {
+  a = parseInt(a, 16).toString(2).padStart(16, '0');
+  b = parseInt(b, 16).toString(2).padStart(16, '0');
+
+  let result = '';
+  for (let i = 0; i < a.length; i++) {
+    if (a[i] === b[i]) {
+      result += '0';
+    } else {
+      result += '1';
+    }
+  }
+
+  const binaryResult =
+    '0x' + parseInt(result, 2).toString(16).padStart(4, '0').toUpperCase();
+  ACTag.innerHTML = binaryResult;
+}
+
+function INCPC(PC) {
+  let value = parseInt(PC, 2);
+  value++;
+
+  value = value.toString(2);
+
+  if (value.length > 11) PCTag.innerHTML = '00000000000';
+  else PCTag.innerHTML = value.padStart(11, '0');
+}
+
+function SHR(binaryString, carry) {
+  binaryNumber = parseInt(binaryString, 16);
+
+  if (binaryNumber % 2 == 1) ETag.innerHTML = '1';
+  else ETag.innerHTML = '0';
+
+  binaryNumber >>= 1;
+
+  if (carry === '1') {
+    binaryNumber += 32768;
+  }
+
+  ACTag.innerHTML =
+    '0x' + binaryNumber.toString(16).padStart(4, '0').toUpperCase();
+}
+
+function SHL(binaryString, carry) {
+  let bin = parseInt(binaryString, 16).toString(2).padStart(16, '0');
+
+  ETag.innerHTML = bin[0];
+
+  let shifted = '';
+  for (let i = 0; i < 16; i++) {
+    if (i === 15) {
+      if (carry == '1') shifted += '1';
+      else shifted += '0';
+    } else {
+      shifted += bin[i + 1];
+    }
+  }
+
+  ACTag.innerHTML =
+    '0x' + parseInt(shifted, 2).toString(16).padStart(4, '0').toUpperCase();
 }
