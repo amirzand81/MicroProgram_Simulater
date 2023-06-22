@@ -85,6 +85,7 @@ stepby.onclick = function () {
 
     // here stop for debuging
 
+    // run F1 operation
     switch (F1Tag.textContent) {
       // F1 -> ADD
       case '001':
@@ -98,7 +99,7 @@ stepby.onclick = function () {
 
       // F1 -> INCAC
       case '011':
-        INCAC(AC);
+        ACTag.innerHTML = INC(AC);
         break;
 
       // F1 -> DRTAC
@@ -122,6 +123,44 @@ stepby.onclick = function () {
       // F1 -> WRITE
       case '111':
         WRITE(DR, AR);
+        break;
+    }
+
+    // run F2 operation
+    switch (F2Tag.textContent) {
+      // F2 -> SUB
+      case '001':
+        SUB(AC, DR);
+        break;
+
+      // F2 -> OR
+      case '010':
+        OR(AC, DR);
+        break;
+
+      // F2 -> AND
+      case '011':
+        AND(AC, DR);
+        break;
+
+      // F2 -> READ
+      case '100':
+        READ(AR);
+        break;
+
+      // F2 -> ACTDR
+      case '101':
+        DRTag.innerHTML = AC;
+        break;
+
+      // F2 -> INCDR
+      case '110':
+        DRTag.innerHTML = INC(DR);
+        break;
+
+      // F2 -> PCTDR
+      case '111':
+        PCTDR(PC, DR);
         break;
     }
 
@@ -695,21 +734,39 @@ function DecimaltotwosComplement(num) {
   return bin;
 }
 
-function INCAC(str) {
+function INC(str) {
   let base2 = parseInt(str, 16).toString(2).padStart(16, '0');
   let decimal = twosComplementToDecimal(base2);
-  ACTag.innerHTML =
+
+  return (
     '0x' +
     parseInt(DecimaltotwosComplement(decimal + 1), 2)
       .toString(16)
       .toUpperCase()
-      .padStart(4, '0');
+      .padStart(4, '0')
+  );
 }
 
 const ADD = (str1, str2) => {
   str1 = parseInt(str1, 16).toString(2);
   str2 = parseInt(str2, 16).toString(2);
 
+  let answer = addition(str1, str2);
+
+  ETag.innerHTML = answer[0];
+  ACTag.innerHTML = answer[1];
+};
+
+function WRITE(str, ad) {
+  const table = document.querySelector('.memory-table table');
+  const columns = table.getElementsByTagName('td');
+
+  let label = columns[(parseInt(ad, 2) + 1) * 5 + 2].textContent;
+  let instrcution = columns[(parseInt(ad, 2) + 1) * 5 + 3].textContent;
+  update_memory_table(parseInt(ad, 2), label, instrcution, str);
+}
+
+function addition(str1, str2) {
   let carry = 0;
   const res = [];
   let l1 = str1.length;
@@ -720,17 +777,73 @@ const ADD = (str1, str2) => {
     res.push((a + b + carry) % 2);
     carry = 1 < a + b + carry;
   }
-
-  ETag.innerHTML = (+carry).toString();
-  ACTag.innerHTML =
+  let result =
     '0x' + parseInt(res.reverse().join(''), 2).toString(16).padStart(4, '0');
-};
+  return [(+carry).toString(), result];
+}
 
-function WRITE(str, ad) {
+function SUB(str1, str2) {
+  str1 = parseInt(str1, 16).toString(2).padStart(16, '0');
+  str2 = parseInt(str2, 16).toString(2).padStart(16, '0');
+  str2 = COM(str2);
+
+  str2 = parseInt(addition(str2, '0000000000000001')[1], 16)
+    .toString(2)
+    .padStart(16, '0');
+
+  let answer = addition(str1, str2);
+  ETag.innerHTML = answer[0];
+  ACTag.innerHTML = answer[1].toUpperCase();
+}
+
+function COM(binaryString) {
+  let result = '';
+
+  for (let i = 0; i < binaryString.length; i++) {
+    result += binaryString[i] === '0' ? '1' : '0';
+  }
+
+  return result;
+}
+
+function OR(str1, str2) {
+  // Convert binary strings to numbers using parseInt with base 2
+  const num1 = parseInt(str1, 16);
+  const num2 = parseInt(str2, 16);
+
+  // Use the | operator to perform bitwise OR on the numbers
+  const result = num1 | num2;
+
+  // Convert result back to binary string using toString with base 2
+  const binaryResult =
+    '0x' + result.toString(16).padStart(4, '0').toUpperCase();
+  ACTag.innerHTML = binaryResult;
+}
+
+function AND(str1, str2) {
+  const num1 = parseInt(str1, 16);
+  const num2 = parseInt(str2, 16);
+
+  const result = num1 & num2;
+
+  const binaryResult =
+    '0x' + result.toString(16).padStart(4, '0').toUpperCase();
+  ACTag.innerHTML = binaryResult;
+}
+
+function READ(ad) {
   const table = document.querySelector('.memory-table table');
   const columns = table.getElementsByTagName('td');
 
-  let label = columns[(parseInt(ad, 2) + 1) * 5 + 2].textContent;
-  let instrcution = columns[(parseInt(ad, 2) + 1) * 5 + 3].textContent;
-  update_memory_table(parseInt(ad, 2), label, instrcution, str);
+  DRTag.innerHTML = columns[(parseInt(ad, 2) + 1) * 5 + 4].textContent;
+}
+
+function PCTDR(str1, str2) {
+  let DR_binary = parseInt(str2, 16).toString(2).padStart(16, '0');
+  DRTag.innerHTML =
+    '0x' +
+    parseInt(DR_binary.slice(0, 5) + str1, 2)
+      .toString(16)
+      .padStart(4, '0')
+      .toUpperCase();
 }
