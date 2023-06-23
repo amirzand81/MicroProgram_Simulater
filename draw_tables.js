@@ -238,6 +238,12 @@ function getMicroprogramLine(line) {
   return column[(line + 1) * 5 + 4].textContent;
 }
 
+function getProgramLine(line) {
+  const table = document.querySelector('.memory-table table');
+  const column = table.getElementsByTagName('td');
+  return column[(line + 1) * 5 + 4].textContent;
+}
+
 // function test() {
 //   const table = document.querySelector('.micromemory-table table');
 //   const row = table.getElementsByTagName('tr');

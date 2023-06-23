@@ -62,150 +62,8 @@ stepby.onclick = function () {
     return;
   }
 
-  let line = 2;
-
-  while (true) {
-    let AC = ACTag.textContent;
-    let DR = DRTag.textContent;
-    let AR = ARTag.textContent;
-    let PC = PCTag.textContent;
-    let E = ETag.textContent;
-    let SBR = SBRTag.textContent;
-    let CAR = CARTag.textContent;
-
-    let instrcution = parseInt(getMicroprogramLine(line), 16)
-      .toString(2)
-      .padStart(20, '0');
-
-    F1Tag.innerHTML = instrcution.slice(0, 3).padStart(3, '0');
-    F2Tag.innerHTML = instrcution.slice(3, 6).padStart(3, '0');
-    F3Tag.innerHTML = instrcution.slice(6, 9).padStart(3, '0');
-    CDTag.innerHTML = instrcution.slice(9, 10).padStart(2, '0');
-    BRTag.innerHTML = instrcution.slice(10, 12).padStart(2, '0');
-    ADTag.innerHTML = instrcution.slice(12, 20).padStart(7, '0');
-
-    // here stop for debuging
-
-    // run F1 operation
-    switch (F1Tag.textContent) {
-      // F1 -> ADD
-      case '001':
-        ADD(AC, DR);
-        break;
-
-      // F1 -> CLRAC
-      case '010':
-        ACTag.innerHTML = '0x0000';
-        AC = '0x0000';
-        break;
-
-      // F1 -> INCAC
-      case '011':
-        ACTag.innerHTML = INC(AC);
-        break;
-
-      // F1 -> DRTAC
-      case '100':
-        ACTag.innerHTML = DR;
-        break;
-
-      // F1 -> DRTAR
-      case '101':
-        ARTag.innerHTML = parseInt(DR, 16)
-          .toString(2)
-          .padStart(16, '0')
-          .slice(5);
-        break;
-
-      // F1 -> PCTAR
-      case '110':
-        ARTag.innerHTML = PC;
-        break;
-
-      // F1 -> WRITE
-      case '111':
-        WRITE(DR, AR);
-        break;
-    }
-
-    // run F2 operation
-    switch (F2Tag.textContent) {
-      // F2 -> SUB
-      case '001':
-        SUB(AC, DR);
-        break;
-
-      // F2 -> OR
-      case '010':
-        OR(AC, DR);
-        break;
-
-      // F2 -> AND
-      case '011':
-        AND(AC, DR);
-        break;
-
-      // F2 -> READ
-      case '100':
-        READ(AR);
-        break;
-
-      // F2 -> ACTDR
-      case '101':
-        DRTag.innerHTML = AC;
-        break;
-
-      // F2 -> INCDR
-      case '110':
-        DRTag.innerHTML = INC(DR);
-        break;
-
-      // F2 -> PCTDR
-      case '111':
-        PCTDR(PC, DR);
-        break;
-    }
-
-    // run F3 operation
-    switch (F3Tag.textContent) {
-      // F3 -> XOR
-      case '001':
-        XOR(AC, DR);
-        break;
-
-      // F3 -> COM
-      case '010':
-        let complementone = COM(parseInt(AC, 16).toString(2).padStart(16, '0'));
-        ACTag.innerHTML =
-          '0x' +
-          parseInt(complementone, 2)
-            .toString(16)
-            .padStart(4, '0')
-            .toUpperCase();
-        break;
-
-      // F3 -> SHL
-      case '011':
-        SHL(AC, E);
-        break;
-
-      // F3 -> SHR
-      case '100':
-        SHR(AC, E);
-        break;
-
-      // F3 -> INCPC
-      case '101':
-        INCPC(PC);
-        break;
-
-      // F3 -> ARTPC
-      case '110':
-        PCTag.innerHTML = AR;
-        break;
-    }
-
-    break;
+  for (let index = 0; index < 1; index++) {
+    doMicroprogamLine();
   }
 };
 
@@ -243,6 +101,7 @@ assembler.onclick = function () {
   let addrss_symble_table = new Array();
   // first level of translation (complete symble table addresses)
   for (let i = 0; i < len; i++) {
+    pointer++;
     let label = '';
     let line = program_code[i].split(' ').filter(str => str.trim() !== '');
 
@@ -292,8 +151,10 @@ assembler.onclick = function () {
         }
       }
 
-      program_code[i] = label + ', ' + line.join(' ');
-      if (label !== '') addrss_symble_table.push([label, pointer++]);
+      if (label !== '') {
+        addrss_symble_table.push([label, pointer - 1]);
+        program_code[i] = label + ', ' + line.join(' ');
+      } else program_code[i] = line.join(' ');
     }
   }
 
@@ -432,6 +293,7 @@ micropro.onclick = function () {
 
   // first level of translation (complete symble table addresses)
   for (let i = 0; i < len; i++) {
+    pointer++;
     let label = '';
     let line = micropro_code[i].split(' ').filter(str => str.trim() !== '');
 
@@ -488,8 +350,10 @@ micropro.onclick = function () {
         }
       }
 
-      micropro_code[i] = label + ': ' + line.join(' ');
-      if (label !== '') addrss_symble_table.push([label, pointer++]);
+      if (label !== '') {
+        addrss_symble_table.push([label, pointer - 1]);
+        micropro_code[i] = label + ': ' + line.join(' ');
+      } else micropro_code[i] = line.join(' ');
     }
   }
 
@@ -523,9 +387,11 @@ micropro.onclick = function () {
       switch (line[line.length - 1]) {
         case 'RET':
           br = '10';
+          line.pop();
+          break;
+
         case 'MAP':
           br = '11';
-
           line.pop();
           break;
 
@@ -819,7 +685,11 @@ function addition(str1, str2) {
     carry = 1 < a + b + carry;
   }
   let result =
-    '0x' + parseInt(res.reverse().join(''), 2).toString(16).padStart(4, '0');
+    '0x' +
+    parseInt(res.reverse().join(''), 2)
+      .toString(16)
+      .padStart(4, '0')
+      .toUpperCase();
   return [(+carry).toString(), result];
 }
 
@@ -950,4 +820,198 @@ function SHL(binaryString, carry) {
 
   ACTag.innerHTML =
     '0x' + parseInt(shifted, 2).toString(16).padStart(4, '0').toUpperCase();
+}
+
+function doMicroprogamLine() {
+  let AC = ACTag.textContent;
+  let DR = DRTag.textContent;
+  let AR = ARTag.textContent;
+  let PC = PCTag.textContent;
+  let E = ETag.textContent;
+
+  // run F1 operation
+  switch (F1Tag.textContent) {
+    // F1 -> ADD
+    case '001':
+      ADD(AC, DR);
+      break;
+
+    // F1 -> CLRAC
+    case '010':
+      ACTag.innerHTML = '0x0000';
+      AC = '0x0000';
+      break;
+
+    // F1 -> INCAC
+    case '011':
+      ACTag.innerHTML = INC(AC);
+      break;
+
+    // F1 -> DRTAC
+    case '100':
+      ACTag.innerHTML = DR;
+      break;
+
+    // F1 -> DRTAR
+    case '101':
+      ARTag.innerHTML = parseInt(DR, 16).toString(2).padStart(16, '0').slice(5);
+      break;
+
+    // F1 -> PCTAR
+    case '110':
+      ARTag.innerHTML = PC;
+      break;
+
+    // F1 -> WRITE
+    case '111':
+      WRITE(DR, AR);
+      break;
+  }
+
+  // run F2 operation
+  switch (F2Tag.textContent) {
+    // F2 -> SUB
+    case '001':
+      SUB(AC, DR);
+      break;
+
+    // F2 -> OR
+    case '010':
+      OR(AC, DR);
+      break;
+
+    // F2 -> AND
+    case '011':
+      AND(AC, DR);
+      break;
+
+    // F2 -> READ
+    case '100':
+      READ(AR);
+      break;
+
+    // F2 -> ACTDR
+    case '101':
+      DRTag.innerHTML = AC;
+      break;
+
+    // F2 -> INCDR
+    case '110':
+      DRTag.innerHTML = INC(DR);
+      break;
+
+    // F2 -> PCTDR
+    case '111':
+      PCTDR(PC, DR);
+      break;
+  }
+
+  // run F3 operation
+  switch (F3Tag.textContent) {
+    // F3 -> XOR
+    case '001':
+      XOR(AC, DR);
+      break;
+
+    // F3 -> COM
+    case '010':
+      let complementone = COM(parseInt(AC, 16).toString(2).padStart(16, '0'));
+      ACTag.innerHTML =
+        '0x' +
+        parseInt(complementone, 2).toString(16).padStart(4, '0').toUpperCase();
+      break;
+
+    // F3 -> SHL
+    case '011':
+      SHL(AC, E);
+      break;
+
+    // F3 -> SHR
+    case '100':
+      SHR(AC, E);
+      break;
+
+    // F3 -> INCPC
+    case '101':
+      INCPC(PC);
+      break;
+
+    // F3 -> ARTPC
+    case '110':
+      PCTag.innerHTML = AR;
+      break;
+  }
+
+  let condition;
+
+  // check condtion
+  switch (CDTag.textContent) {
+    case '00':
+      condition = true;
+      break;
+    case '01':
+      condition = ITag.textContent.trim() == '1';
+      break;
+    case '10':
+      condition =
+        parseInt(ACTag.textContent, 16).toString(2).padStart(16, '0')[0] == '1';
+      break;
+    case '11':
+      condition = ACTag.textContent.trim() == '0x0000';
+      break;
+  }
+
+  let returnAdd;
+
+  // branching
+  switch (BRTag.textContent) {
+    case '00':
+      if (condition) returnAdd = ADTag.textContent;
+      else
+        returnAdd = (parseInt(CARTag.textContent, 2) + 1)
+          .toString(2)
+          .padStart(7, '0');
+      break;
+    case '01':
+      if (condition) {
+        SBRTag.innerHTML = (parseInt(CARTag.textContent, 2) + 1)
+          .toString(2)
+          .padStart(7, '0');
+        returnAdd = ADTag.textContent;
+      } else {
+        returnAdd = (parseInt(CARTag.textContent, 2) + 1)
+          .toString(2)
+          .padStart(7, '0');
+      }
+      break;
+    case '10':
+      returnAdd = SBRTag.textContent;
+      break;
+    case '11':
+      returnAdd =
+        '0' + parseInt(DR, 16).toString(2).padStart(16, '0').slice(1, 5) + '00';
+
+      let line = parseInt(DR, 16).toString(2).padStart(16, '0');
+
+      ITag.innerHTML = line[0];
+      OPCODETag.innerHTML = line.slice(1, 5);
+      ADDRTag.innerHTML = line.slice(5, 16);
+      break;
+  }
+
+  CARTag.innerHTML = returnAdd;
+
+  let instrcution = parseInt(
+    getMicroprogramLine(parseInt(CARTag.textContent, 2)),
+    16
+  )
+    .toString(2)
+    .padStart(20, '0');
+
+  F1Tag.innerHTML = instrcution.slice(0, 3).padStart(3, '0');
+  F2Tag.innerHTML = instrcution.slice(3, 6).padStart(3, '0');
+  F3Tag.innerHTML = instrcution.slice(6, 9).padStart(3, '0');
+  CDTag.innerHTML = instrcution.slice(9, 11).padStart(2, '0');
+  BRTag.innerHTML = instrcution.slice(11, 13).padStart(2, '0');
+  ADTag.innerHTML = instrcution.slice(13, 20).padStart(7, '0');
 }
