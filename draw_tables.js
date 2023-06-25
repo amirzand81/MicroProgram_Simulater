@@ -214,10 +214,19 @@ function lookup(str) {
   return -1;
 }
 
+function scrollToRowMicroprogram(number) {
+  const table = document.querySelector('.micromemory-table table');
+  const rows = table.getElementsByTagName('tr');
+  if (number == 0) {
+    table.scrollTop = rows[number].offsetTop;
+  }
+  rows[number].scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
 function scrollToRow(number) {
   const table = document.querySelector('.memory-table table');
   const rows = table.getElementsByTagName('tr');
-  table.scrollTop = rows[number - 2].offsetTop;
+  table.scrollTop = rows[number].offsetTop;
 }
 
 function clear_microprogram_table() {
@@ -238,14 +247,8 @@ function getMicroprogramLine(line) {
   return column[(line + 1) * 5 + 4].textContent;
 }
 
-function getProgramLine(line) {
-  const table = document.querySelector('.memory-table table');
-  const column = table.getElementsByTagName('td');
-  return column[(line + 1) * 5 + 4].textContent;
+function changeColor(line, color) {
+  const table = document.querySelector('.micromemory-table table');
+  const row = table.getElementsByTagName('tr');
+  row[line + 1].style.backgroundColor = color;
 }
-
-// function test() {
-//   const table = document.querySelector('.micromemory-table table');
-//   const row = table.getElementsByTagName('tr');
-//   console.log((row[1].style.backgroundColor = 'red'));
-// }

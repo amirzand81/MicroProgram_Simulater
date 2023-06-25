@@ -1,6 +1,8 @@
 let isMicroprogramm = false;
 let isProgram = false;
+let firstClickStep = true;
 
+let stopBtn = document.getElementById('stop');
 let ACTag = document.getElementsByClassName('AC')[0];
 let DRTag = document.getElementsByClassName('DR')[0];
 let ARTag = document.getElementsByClassName('AR')[0];
@@ -55,6 +57,20 @@ start.onclick = function () {
   }
 };
 
+let aboutme = document.getElementById('aboutme');
+aboutme.onclick = function () {
+  alert('This project is created by Amirhossein Zendevani:)');
+};
+
+stopBtn.onclick = function () {
+  for (let i = 0; i < 128; i++) {
+    changeColor(i, 'white');
+  }
+
+  stopBtn.hidden = true;
+  firstClickStep = true;
+};
+
 let stepby = document.getElementById('stepby');
 stepby.onclick = function () {
   if (!isProgram) {
@@ -62,9 +78,17 @@ stepby.onclick = function () {
     return;
   }
 
-  for (let index = 0; index < 1; index++) {
-    doMicroprogamLine();
+  stopBtn.hidden = false;
+
+  if (firstClickStep) {
+    reset();
+    changeColor(64, 'yellow');
+    scrollToRowMicroprogram(64);
+    firstClickStep = false;
+    return;
   }
+
+  doMicroprogamLine(true);
 };
 
 document.getElementsByTagName('textarea')[1].onchange = function () {
@@ -172,7 +196,7 @@ assembler.onclick = function () {
       .filter(str => str.trim() !== '');
 
     if (line[0] === 'ORG') {
-      pointer = parseInt(line[1]);
+      pointer = parseInt(line[1], 16);
       continue;
     }
 
@@ -674,6 +698,9 @@ function WRITE(str, ad) {
 }
 
 function addition(str1, str2) {
+  str1 = str1.padStart(16, '0');
+  str2 = str2.padStart(16, '0');
+
   let carry = 0;
   const res = [];
   let l1 = str1.length;
@@ -822,13 +849,18 @@ function SHL(binaryString, carry) {
     '0x' + parseInt(shifted, 2).toString(16).padStart(4, '0').toUpperCase();
 }
 
-function doMicroprogamLine() {
+function doMicroprogamLine(bool) {
   let AC = ACTag.textContent;
   let DR = DRTag.textContent;
   let AR = ARTag.textContent;
   let PC = PCTag.textContent;
   let E = ETag.textContent;
 
+  if (bool) {
+    changeColor(parseInt(CARTag.textContent, 2), 'white');
+    scrollToRowMicroprogram(parseInt(CARTag.textContent, 2) + 1);
+  }
+  
   // run F1 operation
   switch (F1Tag.textContent) {
     // F1 -> ADD
@@ -999,6 +1031,11 @@ function doMicroprogamLine() {
       break;
   }
 
+  if (bool) {
+    changeColor(parseInt(returnAdd, 2), 'yellow');
+    scrollToRowMicroprogram(parseInt(returnAdd, 2) + 1);
+  }
+
   CARTag.innerHTML = returnAdd;
 
   let instrcution = parseInt(
@@ -1014,4 +1051,23 @@ function doMicroprogamLine() {
   CDTag.innerHTML = instrcution.slice(9, 11).padStart(2, '0');
   BRTag.innerHTML = instrcution.slice(11, 13).padStart(2, '0');
   ADTag.innerHTML = instrcution.slice(13, 20).padStart(7, '0');
+}
+
+function reset() {
+  ACTag.innerHTML = '0x0000';
+  DRTag.innerHTML = '0x0000';
+  ARTag.innerHTML = '00000000000';
+  PCTag.innerHTML = '00000000000';
+  ETag.innerHTML = '0';
+  SBRTag.innerHTML = '0000000';
+  CARTag.innerHTML = '1000000';
+  ITag.innerHTML = '0';
+  OPCODETag.innerHTML = '0000';
+  ADDRTag.innerHTML = '00000000000';
+  F1Tag.innerHTML = '110';
+  F2Tag.innerHTML = '000';
+  F3Tag.innerHTML = '000';
+  CDTag.innerHTML = '00';
+  BRTag.innerHTML = '00';
+  ADTag.innerHTML = '1000001';
 }
