@@ -91,6 +91,8 @@ stepby.onclick = function () {
   if (firstClickStep) {
     reset();
     assembling();
+    changeColorMemory(0, 'yellow');
+    scrollToRow(0);
     changeColor(64, 'yellow');
     scrollToRowMicroprogram(64);
     firstClickStep = false;
@@ -725,6 +727,10 @@ function doMicroprogamLine(bool) {
       if (ARTag.textContent == '11111111111') {
         stopBtn.hidden = true;
         firstClickStep = true;
+
+        for (let i = 0; i < 2048; i++) {
+          changeColorMemory(i, 'white');
+        }
         return;
       }
       break;
@@ -838,8 +844,17 @@ function doMicroprogamLine(bool) {
   // branching
   switch (BRTag.textContent) {
     case '00':
-      if (condition) returnAdd = ADTag.textContent;
-      else
+      if (condition) {
+        returnAdd = ADTag.textContent;
+        if (bool && returnAdd == '1000000') {
+          for (let i = 0; i < 2048; i++) {
+            changeColorMemory(i, 'white');
+          }
+
+          changeColorMemory(parseInt(PC, 2), 'yellow');
+          scrollToRow(parseInt(PC, 2));
+        }
+      } else
         returnAdd = (parseInt(CARTag.textContent, 2) + 1)
           .toString(2)
           .padStart(7, '0');
@@ -864,7 +879,6 @@ function doMicroprogamLine(bool) {
         '0' + parseInt(DR, 16).toString(2).padStart(16, '0').slice(1, 5) + '00';
 
       let line = parseInt(DR, 16).toString(2).padStart(16, '0');
-
       ITag.innerHTML = line[0];
       OPCODETag.innerHTML = line.slice(1, 5);
       ADDRTag.innerHTML = line.slice(5, 16);

@@ -226,7 +226,10 @@ function scrollToRowMicroprogram(number) {
 function scrollToRow(number) {
   const table = document.querySelector('.memory-table table');
   const rows = table.getElementsByTagName('tr');
-  table.scrollTop = rows[number].offsetTop;
+  if (number == 0) {
+    table.scrollTop = rows[number].offsetTop;
+  }
+  rows[number].scrollIntoView({ behavior: 'smooth', block: 'center' });
 }
 
 function clear_microprogram_table() {
@@ -249,6 +252,12 @@ function getMicroprogramLine(line) {
 
 function changeColor(line, color) {
   const table = document.querySelector('.micromemory-table table');
+  const row = table.getElementsByTagName('tr');
+  row[line + 1].style.backgroundColor = color;
+}
+
+function changeColorMemory(line, color) {
+  const table = document.querySelector('.memory-table table');
   const row = table.getElementsByTagName('tr');
   row[line + 1].style.backgroundColor = color;
 }
