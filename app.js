@@ -50,10 +50,18 @@ let micro_label = document.getElementsByClassName('micro_label')[0];
 let program_label = document.getElementsByClassName('program_label')[0];
 
 let start = document.getElementById('start');
-start.onclick = function () {
+start.onclick = async function () {
   if (!isProgram) {
     alert('First, you should assemble your program code');
     return;
+  }
+
+  reset();
+  assembling();
+
+  while (ARTag.textContent != '11111111111') {
+    doMicroprogamLine(false);
+    await sleep(200);
   }
 };
 
@@ -82,6 +90,7 @@ stepby.onclick = function () {
 
   if (firstClickStep) {
     reset();
+    assembling();
     changeColor(64, 'yellow');
     scrollToRowMicroprogram(64);
     firstClickStep = false;
@@ -108,181 +117,8 @@ assembler.onclick = function () {
     return;
   }
 
-  clear_memory_table();
-  let pointer;
-  let program_code = document
-    .getElementsByTagName('textarea')[1]
-    .value.split('\n')
-    .map(item => item.trim())
-    .filter(Boolean);
+  assembling();
 
-  // check microprogram code be not empty
-  if (program_code.length == 0) {
-    return;
-  }
-
-  let len = program_code.length;
-  let addrss_symble_table = new Array();
-  // first level of translation (complete symble table addresses)
-  for (let i = 0; i < len; i++) {
-    pointer++;
-    let label = '';
-    let line = program_code[i].split(' ').filter(str => str.trim() !== '');
-
-    // check microprogram code started with ORG
-    if (i == 0 && line[0] != 'ORG') {
-      alert('Program code must start with ORG.');
-      return;
-    }
-
-    // check microprogram code finished with END
-    if (i == len - 1) {
-      if (line[0] !== 'END' || line.length > 1) {
-        alert('Program code must end with END.');
-        return;
-      }
-    }
-
-    // ORG (set pointer)
-    else if (line[0] === 'ORG') {
-      if (line.length == 2) {
-        pointer = parseInt(line[1]);
-        continue;
-      } else {
-        alert('ORG must have a parameter');
-        return;
-      }
-    }
-
-    // check if instrcution has label, extract it
-    else {
-      if (line.join(' ').includes(',')) {
-        let temp = line
-          .join(' ')
-          .split(',')
-          .filter(str => str.trim() !== '');
-
-        label = temp[0].trim();
-        line = temp[1].split(' ');
-
-        if (line[0] == '') line.shift();
-      }
-      for (let i = 0; i < addrss_symble_table.length; i++) {
-        if (addrss_symble_table[i][0] === label) {
-          clear_memory_table();
-          alert(`${label} is previuosly defined.`);
-          return;
-        }
-      }
-
-      if (label !== '') {
-        addrss_symble_table.push([label, pointer - 1]);
-        program_code[i] = label + ', ' + line.join(' ');
-      } else program_code[i] = line.join(' ');
-    }
-  }
-
-  // second level of translation (translation instructions)
-  for (let i = 0; i < len - 1; i++) {
-    let I = '0';
-    let address = '00000000000';
-    let opcode;
-
-    let label = '';
-
-    let line = program_code
-      .shift()
-      .split(' ')
-      .filter(str => str.trim() !== '');
-
-    if (line[0] === 'ORG') {
-      pointer = parseInt(line[1], 16);
-      continue;
-    }
-
-    // translation of each instruction
-    else {
-      if (line[0].includes(',')) {
-        label = line[0].slice(0, -1);
-        line.shift();
-      }
-
-      let instruction_string = line.join(' ');
-
-      if (line[0] == 'HEX') {
-        let instruction_code = '0x' + line[1].padStart(4, '0');
-
-        update_memory_table(
-          pointer++,
-          label,
-          instruction_string,
-          instruction_code
-        );
-        continue;
-      }
-
-      if (line[0] == 'DEC') {
-        let instruction_code =
-          '0x' + parseInt(line[1]).toString(16).toUpperCase().padStart(4, '0');
-
-        update_memory_table(
-          pointer++,
-          label,
-          instruction_string,
-          instruction_code
-        );
-        continue;
-      }
-
-      if (lookup(line[0]) === -1) {
-        clear_memory_table();
-        alert(line[0] + ' is not a instruction');
-        return;
-      }
-
-      opcode = (lookup(line[0]) / 4).toString(2).padStart(4, '0');
-
-      if (line.length == 3) {
-        if (line[2] == 'I') I = '1';
-        else {
-          clear_memory_table();
-          alert('Error in line ' + pointer);
-          return;
-        }
-        line.pop();
-      }
-
-      if (line.length == 2) {
-        let flag = true;
-        for (let i = 0; i < addrss_symble_table.length; i++) {
-          if (addrss_symble_table[i][0] == line[1]) {
-            flag = false;
-            address = addrss_symble_table[i][1].toString(2).padStart(11, '0');
-          }
-        }
-
-        if (flag) {
-          clear_memory_table();
-          alert(`${line[1]} is not decleared`);
-          return;
-        }
-      }
-
-      let instruction_code =
-        '0x' +
-        parseInt(I + opcode + address, 2)
-          .toString(16)
-          .toUpperCase()
-          .padStart(4, '0');
-
-      update_memory_table(
-        pointer++,
-        label,
-        instruction_string,
-        instruction_code
-      );
-    }
-  }
   isProgram = true;
   program_label.innerHTML = 'Program';
   alert('Program assembled succesfully.');
@@ -854,13 +690,12 @@ function doMicroprogamLine(bool) {
   let DR = DRTag.textContent;
   let AR = ARTag.textContent;
   let PC = PCTag.textContent;
-  let E = ETag.textContent;
 
   if (bool) {
     changeColor(parseInt(CARTag.textContent, 2), 'white');
     scrollToRowMicroprogram(parseInt(CARTag.textContent, 2) + 1);
   }
-  
+
   // run F1 operation
   switch (F1Tag.textContent) {
     // F1 -> ADD
@@ -887,6 +722,11 @@ function doMicroprogamLine(bool) {
     // F1 -> DRTAR
     case '101':
       ARTag.innerHTML = parseInt(DR, 16).toString(2).padStart(16, '0').slice(5);
+      if (ARTag.textContent == '11111111111') {
+        stopBtn.hidden = true;
+        firstClickStep = true;
+        return;
+      }
       break;
 
     // F1 -> PCTAR
@@ -1070,4 +910,275 @@ function reset() {
   CDTag.innerHTML = '00';
   BRTag.innerHTML = '00';
   ADTag.innerHTML = '1000001';
+}
+
+function binaryToHex(str) {
+  result = '';
+  while (str != '') {
+    temp = str.slice(0, 4);
+    str = str.substring(4);
+
+    switch (temp) {
+      case '0000':
+        result += '0';
+        break;
+
+      case '0001':
+        result += '1';
+        break;
+
+      case '0010':
+        result += '2';
+        break;
+
+      case '0011':
+        result += '3';
+        break;
+
+      case '0100':
+        result += '4';
+        break;
+
+      case '0101':
+        result += '5';
+        break;
+
+      case '0110':
+        result += '6';
+        break;
+
+      case '0111':
+        result += '7';
+        break;
+
+      case '1000':
+        result += '8';
+        break;
+
+      case '1001':
+        result += '9';
+        break;
+
+      case '1010':
+        result += 'A';
+        break;
+
+      case '1011':
+        result += 'B';
+        break;
+
+      case '1100':
+        result += 'C';
+        break;
+
+      case '1101':
+        result += 'D';
+        break;
+
+      case '1110':
+        result += 'E';
+        break;
+
+      case '1111':
+        result += 'F';
+        break;
+    }
+  }
+
+  return result;
+}
+
+function assembling() {
+  clear_memory_table();
+  let pointer;
+  let program_code = document
+    .getElementsByTagName('textarea')[1]
+    .value.split('\n')
+    .map(item => item.trim())
+    .filter(Boolean);
+
+  // check microprogram code be not empty
+  if (program_code.length == 0) {
+    return;
+  }
+
+  let len = program_code.length;
+  let addrss_symble_table = new Array();
+  // first level of translation (complete symble table addresses)
+  for (let i = 0; i < len; i++) {
+    pointer++;
+    let label = '';
+    let line = program_code[i].split(' ').filter(str => str.trim() !== '');
+
+    // check microprogram code started with ORG
+    if (i == 0 && line[0] != 'ORG') {
+      alert('Program code must start with ORG.');
+      return;
+    }
+
+    // check microprogram code finished with END
+    if (i == len - 1) {
+      if (line[0] !== 'END' || line.length > 1) {
+        alert('Program code must end with END.');
+        return;
+      }
+    }
+
+    // ORG (set pointer)
+    else if (line[0] === 'ORG') {
+      if (line.length == 2) {
+        pointer = parseInt(line[1]);
+        continue;
+      } else {
+        alert('ORG must have a parameter');
+        return;
+      }
+    }
+
+    // check if instrcution has label, extract it
+    else {
+      if (line.join(' ').includes(',')) {
+        let temp = line
+          .join(' ')
+          .split(',')
+          .filter(str => str.trim() !== '');
+
+        label = temp[0].trim();
+        line = temp[1].split(' ');
+
+        if (line[0] == '') line.shift();
+      }
+      for (let i = 0; i < addrss_symble_table.length; i++) {
+        if (addrss_symble_table[i][0] === label) {
+          clear_memory_table();
+          alert(`${label} is previuosly defined.`);
+          return;
+        }
+      }
+
+      if (label !== '') {
+        addrss_symble_table.push([label, pointer - 1]);
+        program_code[i] = label + ', ' + line.join(' ');
+      } else program_code[i] = line.join(' ');
+    }
+  }
+
+  // second level of translation (translation instructions)
+  for (let i = 0; i < len - 1; i++) {
+    let I = '0';
+    let address = '00000000000';
+    let opcode;
+
+    let label = '';
+
+    let line = program_code
+      .shift()
+      .split(' ')
+      .filter(str => str.trim() !== '');
+
+    if (line[0] === 'ORG') {
+      pointer = parseInt(line[1], 16);
+      continue;
+    }
+
+    // translation of each instruction
+    else {
+      if (line[0].includes(',')) {
+        label = line[0].slice(0, -1);
+        line.shift();
+      }
+
+      let instruction_string = line.join(' ');
+
+      if (line.join() == 'HLT') {
+        let instruction_code = '0xFFFF';
+
+        update_memory_table(
+          pointer++,
+          label,
+          instruction_string,
+          instruction_code
+        );
+        continue;
+      }
+
+      if (line[0] == 'HEX') {
+        let instruction_code = '0x' + line[1].padStart(4, '0');
+
+        update_memory_table(
+          pointer++,
+          label,
+          instruction_string,
+          instruction_code
+        );
+        continue;
+      }
+
+      if (line[0] == 'DEC') {
+        let instruction_code =
+          '0x' +
+          binaryToHex(DecimaltotwosComplement(parseInt(line[1]))).toUpperCase();
+
+        update_memory_table(
+          pointer++,
+          label,
+          instruction_string,
+          instruction_code
+        );
+        continue;
+      }
+
+      if (lookup(line[0]) === -1) {
+        clear_memory_table();
+        alert(line[0] + ' is not a instruction');
+        return;
+      }
+
+      opcode = (lookup(line[0]) / 4).toString(2).padStart(4, '0');
+
+      if (line.length == 3) {
+        if (line[2] == 'I') I = '1';
+        else {
+          clear_memory_table();
+          alert('Error in line ' + pointer);
+          return;
+        }
+        line.pop();
+      }
+
+      if (line.length == 2) {
+        let flag = true;
+        for (let i = 0; i < addrss_symble_table.length; i++) {
+          if (addrss_symble_table[i][0] == line[1]) {
+            flag = false;
+            address = addrss_symble_table[i][1].toString(2).padStart(11, '0');
+          }
+        }
+
+        if (flag) {
+          clear_memory_table();
+          alert(`${line[1]} is not decleared`);
+          return;
+        }
+      }
+
+      let instruction_code =
+        '0x' +
+        parseInt(I + opcode + address, 2)
+          .toString(16)
+          .toUpperCase()
+          .padStart(4, '0');
+
+      update_memory_table(
+        pointer++,
+        label,
+        instruction_string,
+        instruction_code
+      );
+    }
+  }
+}
+
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
 }
