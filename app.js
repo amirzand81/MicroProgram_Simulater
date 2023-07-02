@@ -51,6 +51,11 @@ let program_label = document.getElementsByClassName('program_label')[0];
 
 let start = document.getElementById('start');
 start.onclick = async function () {
+  if (!isMicroprogramm) {
+    alert('First, you should translation your Microprogram code');
+    return;
+  }
+
   if (!isProgram) {
     alert('First, you should assemble your program code');
     return;
@@ -58,8 +63,9 @@ start.onclick = async function () {
 
   reset();
   assembling();
+  firstClickStep = false;
 
-  while (ARTag.textContent != '11111111111') {
+  while (ARTag.textContent != '11111111111' && !firstClickStep) {
     doMicroprogamLine(false);
     await sleep(200);
   }
@@ -75,12 +81,21 @@ stopBtn.onclick = function () {
     changeColor(i, 'white');
   }
 
+  for (let i = 0; i < 2048; i++) {
+    changeColorMemory(i, 'white');
+  }
+
   stopBtn.hidden = true;
   firstClickStep = true;
 };
 
 let stepby = document.getElementById('stepby');
 stepby.onclick = function () {
+  if (!isMicroprogramm) {
+    alert('First, you should translation your Microprogram code');
+    return;
+  }
+
   if (!isProgram) {
     alert('First, you should assemble your program code');
     return;
@@ -119,11 +134,13 @@ assembler.onclick = function () {
     return;
   }
 
-  assembling();
+  let temp = assembling();
 
-  isProgram = true;
-  program_label.innerHTML = 'Program';
-  alert('Program assembled succesfully.');
+  if (temp != false) {
+    isProgram = true;
+    program_label.innerHTML = 'Program';
+    alert('Program assembled succesfully.');
+  }
 };
 
 document.getElementsByTagName('textarea')[0].onchange = function () {
@@ -766,6 +783,21 @@ function doMicroprogamLine(bool) {
     // F2 -> READ
     case '100':
       READ(AR);
+      if (DRTag.textContent === '') {
+        for (let i = 0; i < 128; i++) {
+          changeColor(i, 'white');
+        }
+
+        for (let i = 0; i < 2048; i++) {
+          changeColorMemory(i, 'white');
+        }
+
+        stopBtn.hidden = true;
+        firstClickStep = true;
+        alert('Error');
+        return;
+      }
+
       break;
 
     // F2 -> ACTDR
@@ -1013,7 +1045,7 @@ function assembling() {
 
   // check microprogram code be not empty
   if (program_code.length == 0) {
-    return;
+    return false;
   }
 
   let len = program_code.length;
@@ -1027,14 +1059,14 @@ function assembling() {
     // check microprogram code started with ORG
     if (i == 0 && line[0] != 'ORG') {
       alert('Program code must start with ORG.');
-      return;
+      return false;
     }
 
     // check microprogram code finished with END
     if (i == len - 1) {
       if (line[0] !== 'END' || line.length > 1) {
         alert('Program code must end with END.');
-        return;
+        return false;
       }
     }
 
@@ -1045,7 +1077,7 @@ function assembling() {
         continue;
       } else {
         alert('ORG must have a parameter');
-        return;
+        return false;
       }
     }
 
@@ -1066,7 +1098,7 @@ function assembling() {
         if (addrss_symble_table[i][0] === label) {
           clear_memory_table();
           alert(`${label} is previuosly defined.`);
-          return;
+          return false;
         }
       }
 
@@ -1145,7 +1177,7 @@ function assembling() {
       if (lookup(line[0]) === -1) {
         clear_memory_table();
         alert(line[0] + ' is not a instruction');
-        return;
+        return false;
       }
 
       opcode = (lookup(line[0]) / 4).toString(2).padStart(4, '0');
@@ -1155,7 +1187,7 @@ function assembling() {
         else {
           clear_memory_table();
           alert('Error in line ' + pointer);
-          return;
+          return false;
         }
         line.pop();
       }
@@ -1172,7 +1204,7 @@ function assembling() {
         if (flag) {
           clear_memory_table();
           alert(`${line[1]} is not decleared`);
-          return;
+          return false;
         }
       }
 
