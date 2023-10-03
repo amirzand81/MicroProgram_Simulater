@@ -1,0 +1,8 @@
+Description of this example:
+
+In MicroProgram code we impleament some instruction of Mano computer such as LDA, STA, CLA, ISZ, BUN.
+
+In MainProgram we create an array that contain four integer element: 1, 2, 3, 4
+and then we iterate from items of that array and calculte some of its items and store this result to SUM variable.
+
+You can add some item to the array or edit its elements.
